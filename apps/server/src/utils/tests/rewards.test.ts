@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { calculateRewardAllocations } from "./rewards.js";
-import type { RankedScore } from "../types/leaderboard.js";
+import { calculateRewardAllocations } from "../rewards.js";
+import type { RankedScore } from "../../types/leaderboard.js";
 
 function entries(count: number): RankedScore[] {
   return Array.from({ length: count }, (_, index) => ({
