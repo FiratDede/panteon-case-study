@@ -1,9 +1,8 @@
 export type LeaderboardEntry = {
-  playerId: string;
+  playerId: number;
   playerName: string;
   rank: number;
   score: string;
-  projectedReward: string;
 };
 
 export type LeaderboardResponse = {
@@ -18,10 +17,4 @@ export type LeaderboardResponse = {
   top100: LeaderboardEntry[];
   currentPlayer: LeaderboardEntry | null;
   aroundPlayer: LeaderboardEntry[];
-  rewardRules: {
-    first: string;
-    second: string;
-    third: string;
-    fourthToHundredth: string;
-  };
 };

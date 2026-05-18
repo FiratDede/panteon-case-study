@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { fetchLeaderboard } from "../../../lib/api";
-import type { LeaderboardResponse } from "../types";
+import { fetchLeaderboard } from "../lib/api";
+import type { LeaderboardResponse } from "../types/leaderboard";
 
 type State = {
   data: LeaderboardResponse | null;
