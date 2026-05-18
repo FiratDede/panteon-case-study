@@ -2,7 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "../db/prisma.js";
 import { insertPayoutAudit } from "../repositories/audit.repository.js";
 import { ensureWeek, getPrizePool, getTopScores } from "../repositories/leaderboard.repository.js";
-import { HttpError } from "../utils/http-error.js";
+import { HttpError } from "../errors/http-error.js";
 import { calculateRewardAllocations } from "../utils/rewards.js";
 
 export async function finalizeWeek(weekId: string) {

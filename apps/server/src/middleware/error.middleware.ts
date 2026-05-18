@@ -1,7 +1,7 @@
 import type { ErrorRequestHandler } from "express";
 import { ZodError } from "zod";
 import { logger } from "../config/logger.js";
-import { HttpError } from "../utils/http-error.js";
+import { HttpError } from "../errors/http-error.js";
 
 export const errorMiddleware: ErrorRequestHandler = (error, _request, response, _next) => {
   if (error instanceof ZodError) {

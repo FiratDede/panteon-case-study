@@ -8,7 +8,7 @@ import {
 } from "../repositories/idempotency.repository.js";
 import { ensureWeek, incrementLeaderboardScore, incrementPrizePool } from "../repositories/leaderboard.repository.js";
 import { findPlayerByName } from "../repositories/player.repository.js";
-import { HttpError } from "../utils/http-error.js";
+import { HttpError } from "../errors/http-error.js";
 import { getCurrentWeekId } from "../utils/week.js";
 
 export async function recordEarning(input: {

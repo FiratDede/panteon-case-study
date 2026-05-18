@@ -8,7 +8,7 @@ import {
 } from "../repositories/leaderboard.repository.js";
 import { findPlayerByName, findPlayersByIds } from "../repositories/player.repository.js";
 import type { LeaderboardEntry, RankedScore } from "../types/leaderboard.js";
-import { HttpError } from "../utils/http-error.js";
+import { HttpError } from "../errors/http-error.js";
 import { calculateRewardAllocations } from "../utils/rewards.js";
 import { getCurrentWeekId, getTimeRemainingSeconds } from "../utils/week.js";
 
