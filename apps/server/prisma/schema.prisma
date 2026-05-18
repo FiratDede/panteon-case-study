@@ -28,9 +28,6 @@ enum IdempotencyStatus {
 model Player {
   id                  String                   @id @default(uuid())
   playerName          String                   @unique @map("player_name")
-  displayName         String                   @map("display_name")
-  avatarUrl           String?                  @map("avatar_url")
-  country             String?
   totalMoney          BigInt                   @default(0) @map("total_money")
   createdAt           DateTime                 @default(now()) @map("created_at")
   updatedAt           DateTime                 @updatedAt @map("updated_at")

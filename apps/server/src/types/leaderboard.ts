@@ -1,9 +1,6 @@
 export type LeaderboardEntry = {
   playerId: string;
   playerName: string;
-  displayName: string;
-  avatarUrl: string | null;
-  country: string | null;
   rank: number;
   score: string;
   projectedReward: string;

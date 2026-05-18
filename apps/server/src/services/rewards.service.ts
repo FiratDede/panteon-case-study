@@ -1,123 +1,113 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../db/prisma.js";
-import { AuditRepository } from "../repositories/audit.repository.js";
-import { LeaderboardRepository } from "../repositories/leaderboard.repository.js";
-import { calculateRewardAllocations } from "../utils/rewards.js";
+import { insertPayoutAudit } from "../repositories/audit.repository.js";
+import { ensureWeek, getPrizePool, getTopScores } from "../repositories/leaderboard.repository.js";
 import { HttpError } from "../utils/http-error.js";
+import { calculateRewardAllocations } from "../utils/rewards.js";
 
-export class RewardsService {
-  constructor(
-    private readonly leaderboard = new LeaderboardRepository(),
-    private readonly audit = new AuditRepository()
-  ) {}
+export async function finalizeWeek(weekId: string) {
+  const week = await ensureWeek(weekId);
+  if (week.status === "FINALIZED") {
+    return { weekId, status: "already_finalized" };
+  }
 
-  async finalizeWeek(weekId: string) {
-    const week = await this.leaderboard.ensureWeek(weekId);
-    if (week.status === "FINALIZED") {
-      return { weekId, status: "already_finalized" };
-    }
+  const [topScores, prizePool] = await Promise.all([getTopScores(weekId, 100), getPrizePool(weekId)]);
 
-    const [topScores, prizePool] = await Promise.all([
-      this.leaderboard.getTopScores(weekId, 100),
-      this.leaderboard.getPrizePool(weekId)
-    ]);
+  if (topScores.length === 0) {
+    throw new HttpError(400, "Cannot finalize an empty leaderboard");
+  }
 
-    if (topScores.length === 0) {
-      throw new HttpError(400, "Cannot finalize an empty leaderboard");
-    }
+  const allocations = calculateRewardAllocations(topScores, prizePool);
 
-    const allocations = calculateRewardAllocations(topScores, prizePool);
-
-    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      const updatedWeek = await tx.weeklyLeaderboard.update({
-        where: { weekId },
-        data: {
-          status: "FINALIZING",
-          prizePool
-        }
-      });
-
-      for (const score of topScores) {
-        await tx.weeklyLeaderboardEntry.upsert({
-          where: {
-            weeklyLeaderboardId_playerId: {
-              weeklyLeaderboardId: updatedWeek.id,
-              playerId: score.playerId
-            }
-          },
-          update: {
-            rank: score.rank,
-            score: score.score
-          },
-          create: {
-            weeklyLeaderboardId: updatedWeek.id,
-            playerId: score.playerId,
-            rank: score.rank,
-            score: score.score
-          }
-        });
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    const updatedWeek = await tx.weeklyLeaderboard.update({
+      where: { weekId },
+      data: {
+        status: "FINALIZING",
+        prizePool
       }
-
-      for (const allocation of allocations) {
-        const existingPayout = await tx.rewardPayout.findUnique({
-          where: {
-            weeklyLeaderboardId_playerId: {
-              weeklyLeaderboardId: updatedWeek.id,
-              playerId: allocation.playerId
-            }
-          }
-        });
-
-        if (existingPayout) {
-          continue;
-        }
-
-        await tx.rewardPayout.create({
-          data: {
-            weeklyLeaderboardId: updatedWeek.id,
-            playerId: allocation.playerId,
-            rank: allocation.rank,
-            amount: allocation.amount,
-            status: "PAID",
-            paidAt: new Date()
-          }
-        });
-
-        await tx.player.update({
-          where: { id: allocation.playerId },
-          data: {
-            totalMoney: {
-              increment: allocation.amount
-            }
-          }
-        });
-      }
-
-      await tx.weeklyLeaderboard.update({
-        where: { weekId },
-        data: {
-          status: "FINALIZED",
-          finalizedAt: new Date()
-        }
-      });
     });
 
-    await Promise.all(
-      allocations.map((allocation) =>
-        this.audit.insertPayoutAudit({
-          weekId,
+    for (const score of topScores) {
+      await tx.weeklyLeaderboardEntry.upsert({
+        where: {
+          weeklyLeaderboardId_playerId: {
+            weeklyLeaderboardId: updatedWeek.id,
+            playerId: score.playerId
+          }
+        },
+        update: {
+          rank: score.rank,
+          score: score.score
+        },
+        create: {
+          weeklyLeaderboardId: updatedWeek.id,
+          playerId: score.playerId,
+          rank: score.rank,
+          score: score.score
+        }
+      });
+    }
+
+    for (const allocation of allocations) {
+      const existingPayout = await tx.rewardPayout.findUnique({
+        where: {
+          weeklyLeaderboardId_playerId: {
+            weeklyLeaderboardId: updatedWeek.id,
+            playerId: allocation.playerId
+          }
+        }
+      });
+
+      if (existingPayout) {
+        continue;
+      }
+
+      await tx.rewardPayout.create({
+        data: {
+          weeklyLeaderboardId: updatedWeek.id,
           playerId: allocation.playerId,
           rank: allocation.rank,
-          amount: allocation.amount.toString()
-        })
-      )
-    );
+          amount: allocation.amount,
+          status: "PAID",
+          paidAt: new Date()
+        }
+      });
 
-    return {
-      weekId,
-      status: "finalized",
-      paidPlayers: allocations.length,
-      prizePool: prizePool.toString()
-    };
-  }
+      await tx.player.update({
+        where: { id: allocation.playerId },
+        data: {
+          totalMoney: {
+            increment: allocation.amount
+          }
+        }
+      });
+    }
+
+    await tx.weeklyLeaderboard.update({
+      where: { weekId },
+      data: {
+        status: "FINALIZED",
+        finalizedAt: new Date()
+      }
+    });
+  });
+
+  await Promise.all(
+    allocations.map((allocation) =>
+      insertPayoutAudit({
+        weekId,
+        playerId: allocation.playerId,
+        rank: allocation.rank,
+        amount: allocation.amount.toString()
+      })
+    )
+  );
+
+  return {
+    weekId,
+    status: "finalized",
+    paidPlayers: allocations.length,
+    prizePool: prizePool.toString()
+  };
 }

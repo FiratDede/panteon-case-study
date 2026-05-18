@@ -1,31 +1,31 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { prisma } from "../db/prisma.js";
 
-export class PlayerRepository {
-  constructor(private readonly db: PrismaClient = prisma) {}
+export async function findPlayerByName(playerName: string, db: PrismaClient = prisma) {
+  return await db.player.findUnique({ where: { playerName } });
+}
 
-  findByPlayerName(playerName: string) {
-    return this.db.player.findUnique({ where: { playerName } });
+export async function findPlayersByIds(playerIds: string[], db: PrismaClient = prisma) {
+  if (playerIds.length === 0) {
+    return [];
   }
 
-  findByIds(playerIds: string[]) {
-    if (playerIds.length === 0) {
-      return Promise.resolve([]);
-    }
+  return await db.player.findMany({
+    where: { id: { in: playerIds } }
+  });
+}
 
-    return this.db.player.findMany({
-      where: { id: { in: playerIds } }
-    });
-  }
-
-  incrementTotalMoney(playerId: string, amount: bigint, tx: Prisma.TransactionClient | PrismaClient = this.db) {
-    return tx.player.update({
-      where: { id: playerId },
-      data: {
-        totalMoney: {
-          increment: amount
-        }
+export async function incrementPlayerTotalMoney(
+  playerId: string,
+  amount: bigint,
+  db: Prisma.TransactionClient | PrismaClient = prisma
+) {
+  return await db.player.update({
+    where: { id: playerId },
+    data: {
+      totalMoney: {
+        increment: amount
       }
-    });
-  }
+    }
+  });
 }

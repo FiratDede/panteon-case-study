@@ -1,12 +1,12 @@
 import { PrismaClient } from "@prisma/client";
+import { getCurrentWeekId, getDefaultWeekWindow } from "../src/utils/week.js";
 
 const prisma = new PrismaClient();
 
-const weekId = process.env.ACTIVE_WEEK_ID ?? "2026-W21";
+const weekId = getCurrentWeekId();
 
 async function main() {
-  const startsAt = new Date("2026-05-18T00:00:00.000Z");
-  const endsAt = new Date("2026-05-25T00:00:00.000Z");
+  const { startsAt, endsAt } = getDefaultWeekWindow(weekId);
 
   await prisma.weeklyLeaderboard.upsert({
     where: { weekId },
@@ -21,8 +21,6 @@ async function main() {
       update: {},
       create: {
         playerName,
-        displayName: `Player ${index}`,
-        country: index % 3 === 0 ? "TR" : index % 3 === 1 ? "US" : "DE",
         totalMoney: BigInt(100_000 + index)
       }
     });

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const leaderboardQuerySchema = z.object({
-  playerName: z.string().min(1).max(64)
+  playerName: z.string().min(0).max(64)
 });
 
 export const weekParamsSchema = z.object({

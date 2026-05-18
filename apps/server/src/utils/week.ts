@@ -1,3 +1,17 @@
+const millisecondsPerDay = 24 * 60 * 60 * 1000;
+
+export function getCurrentWeekId(date = new Date()) {
+  const utcDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const day = utcDate.getUTCDay() || 7;
+  utcDate.setUTCDate(utcDate.getUTCDate() + 4 - day);
+
+  const weekYear = utcDate.getUTCFullYear();
+  const yearStart = new Date(Date.UTC(weekYear, 0, 1));
+  const week = Math.ceil(((utcDate.getTime() - yearStart.getTime()) / millisecondsPerDay + 1) / 7);
+
+  return `${weekYear}-W${week.toString().padStart(2, "0")}`;
+}
+
 export function getDefaultWeekWindow(weekId: string) {
   const match = /^(?<year>\d{4})-W(?<week>\d{2})$/.exec(weekId);
 

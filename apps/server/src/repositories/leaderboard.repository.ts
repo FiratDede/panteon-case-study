@@ -1,135 +1,115 @@
-import type { PrismaClient } from "@prisma/client";
-import type { RedisClientType } from "redis";
 import { prisma } from "../db/prisma.js";
 import { redis } from "../db/redis.js";
 import type { RankedScore } from "../types/leaderboard.js";
+import { getLeaderboardDeltasKey, getLeaderboardKey, getPrizePoolKey } from "../utils/redis-keys.js";
 import { getDefaultWeekWindow } from "../utils/week.js";
 
-function leaderboardKey(weekId: string) {
-  return `leaderboard:week:${weekId}`;
+export async function ensureWeek(weekId: string) {
+  const { startsAt, endsAt } = getDefaultWeekWindow(weekId);
+
+  return prisma.weeklyLeaderboard.upsert({
+    where: { weekId },
+    update: {},
+    create: {
+      weekId,
+      startsAt,
+      endsAt
+    }
+  });
 }
 
-function poolKey(weekId: string) {
-  return `leaderboard:week:${weekId}:pool`;
+export async function incrementLeaderboardScore(weekId: string, playerId: string, amount: bigint) {
+  await redis.zIncrBy(getLeaderboardKey(weekId), Number(amount), playerId);
+  await redis.hIncrBy(getLeaderboardDeltasKey(weekId), playerId, Number(amount));
 }
 
-function deltasKey(weekId: string) {
-  return `leaderboard:week:${weekId}:deltas`;
+export async function incrementPrizePool(weekId: string, amount: bigint) {
+  await redis.incrBy(getPrizePoolKey(weekId), Number(amount));
 }
 
-export class LeaderboardRepository {
-  constructor(
-    private readonly db: PrismaClient = prisma,
-    private readonly cache: RedisClientType = redis as RedisClientType
-  ) {}
+export async function getPrizePool(weekId: string) {
+  const value = await redis.get(getPrizePoolKey(weekId));
+  return BigInt(value ?? 0);
+}
 
-  async ensureWeek(weekId: string) {
-    const { startsAt, endsAt } = getDefaultWeekWindow(weekId);
+export async function getTopScores(weekId: string, limit = 100): Promise<RankedScore[]> {
+  const rows = await redis.zRangeWithScores(getLeaderboardKey(weekId), 0, limit - 1, { REV: true });
 
-    return this.db.weeklyLeaderboard.upsert({
-      where: { weekId },
-      update: {},
+  return rows.map((row, index) => ({
+    playerId: row.value,
+    rank: index + 1,
+    score: BigInt(Math.trunc(row.score))
+  }));
+}
+
+export async function getPlayerRankedScore(weekId: string, playerId: string): Promise<RankedScore | null> {
+  const rank = await redis.zRevRank(getLeaderboardKey(weekId), playerId);
+  if (rank === null) {
+    return null;
+  }
+
+  const score = await redis.zScore(getLeaderboardKey(weekId), playerId);
+  return {
+    playerId,
+    rank: rank + 1,
+    score: BigInt(Math.trunc(score ?? 0))
+  };
+}
+
+export async function getRankWindow(weekId: string, rank: number, before = 3, after = 2): Promise<RankedScore[]> {
+  const start = Math.max(0, rank - before - 1);
+  const end = rank + after - 1;
+  const rows = await redis.zRangeWithScores(getLeaderboardKey(weekId), start, end, { REV: true });
+
+  return rows.map((row, index) => ({
+    playerId: row.value,
+    rank: start + index + 1,
+    score: BigInt(Math.trunc(row.score))
+  }));
+}
+
+export async function flushDeltasToPostgres(weekId: string) {
+  const deltas = await redis.hGetAll(getLeaderboardDeltasKey(weekId));
+  const entries = Object.entries(deltas);
+
+  for (const [playerId, delta] of entries) {
+    await prisma.playerWeeklyScore.upsert({
+      where: {
+        weekId_playerId: { weekId, playerId }
+      },
+      update: {
+        score: {
+          increment: BigInt(delta)
+        }
+      },
       create: {
         weekId,
-        startsAt,
-        endsAt
+        playerId,
+        score: BigInt(delta)
       }
     });
+
+    await redis.hDel(getLeaderboardDeltasKey(weekId), playerId);
   }
 
-  async incrementScore(weekId: string, playerId: string, amount: bigint) {
-    await this.cache.zIncrBy(leaderboardKey(weekId), Number(amount), playerId);
-    await this.cache.hIncrBy(deltasKey(weekId), playerId, Number(amount));
+  return entries.length;
+}
+
+export async function rebuildRedisFromPostgres(weekId: string) {
+  const scores = await prisma.playerWeeklyScore.findMany({
+    where: { weekId },
+    select: { playerId: true, score: true }
+  });
+
+  if (scores.length === 0) {
+    return 0;
   }
 
-  async incrementPrizePool(weekId: string, amount: bigint) {
-    await this.cache.incrBy(poolKey(weekId), Number(amount));
-  }
+  await redis.del(getLeaderboardKey(weekId));
+  await redis.zAdd(
+    getLeaderboardKey(weekId),
+    scores.map((score) => ({ value: score.playerId, score: Number(score.score) }))
+  );
 
-  async getPrizePool(weekId: string) {
-    const value = await this.cache.get(poolKey(weekId));
-    return BigInt(value ?? 0);
-  }
-
-  async getTopScores(weekId: string, limit = 100): Promise<RankedScore[]> {
-    const rows = await this.cache.zRangeWithScores(leaderboardKey(weekId), 0, limit - 1, { REV: true });
-
-    return rows.map((row, index) => ({
-      playerId: row.value,
-      rank: index + 1,
-      score: BigInt(Math.trunc(row.score))
-    }));
-  }
-
-  async getPlayerRankedScore(weekId: string, playerId: string): Promise<RankedScore | null> {
-    const rank = await this.cache.zRevRank(leaderboardKey(weekId), playerId);
-    if (rank === null) {
-      return null;
-    }
-
-    const score = await this.cache.zScore(leaderboardKey(weekId), playerId);
-    return {
-      playerId,
-      rank: rank + 1,
-      score: BigInt(Math.trunc(score ?? 0))
-    };
-  }
-
-  async getRankWindow(weekId: string, rank: number, before = 3, after = 2): Promise<RankedScore[]> {
-    const start = Math.max(0, rank - before - 1);
-    const end = rank + after - 1;
-    const rows = await this.cache.zRangeWithScores(leaderboardKey(weekId), start, end, { REV: true });
-
-    return rows.map((row, index) => ({
-      playerId: row.value,
-      rank: start + index + 1,
-      score: BigInt(Math.trunc(row.score))
-    }));
-  }
-
-  async flushDeltasToPostgres(weekId: string) {
-    const deltas = await this.cache.hGetAll(deltasKey(weekId));
-    const entries = Object.entries(deltas);
-
-    for (const [playerId, delta] of entries) {
-      await this.db.playerWeeklyScore.upsert({
-        where: {
-          weekId_playerId: { weekId, playerId }
-        },
-        update: {
-          score: {
-            increment: BigInt(delta)
-          }
-        },
-        create: {
-          weekId,
-          playerId,
-          score: BigInt(delta)
-        }
-      });
-
-      await this.cache.hDel(deltasKey(weekId), playerId);
-    }
-
-    return entries.length;
-  }
-
-  async rebuildRedisFromPostgres(weekId: string) {
-    const scores = await this.db.playerWeeklyScore.findMany({
-      where: { weekId },
-      select: { playerId: true, score: true }
-    });
-
-    if (scores.length === 0) {
-      return 0;
-    }
-
-    await this.cache.del(leaderboardKey(weekId));
-    await this.cache.zAdd(
-      leaderboardKey(weekId),
-      scores.map((score: { playerId: string; score: bigint }) => ({ value: score.playerId, score: Number(score.score) }))
-    );
-
-    return scores.length;
-  }
+  return scores.length;
 }
