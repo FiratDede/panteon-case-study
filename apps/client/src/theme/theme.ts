@@ -7,27 +7,29 @@ export const theme = extendTheme({
   },
   colors: {
     brand: {
-      50: "#edf7f6",
-      100: "#d2ebe8",
-      500: "#248a84",
-      700: "#16635f",
-      900: "#0d3434"
-    },
-    coin: {
-      100: "#fff2bf",
-      500: "#f2b705",
-      700: "#a86500"
+      50: "#E6F6F7",
+      100: "#C7ECEE",
+      500: "#0A9396",
+      600: "#087F82",
+      700: "#066A6C"
     }
   },
   styles: {
     global: {
       body: {
-        bg: "#f5f7fa",
-        color: "#14213d"
+        bg: "#F7F7F7",
+        color: "#333333"
       }
     }
   },
+  space: {
+    18: "4.5rem",
+    22: "5.5rem"
+  },
   radii: {
-    card: "8px"
+    card: "4px"
+  },
+  shadows: {
+    card: "0 8px 24px rgba(51, 51, 51, 0.06)"
   }
 });
