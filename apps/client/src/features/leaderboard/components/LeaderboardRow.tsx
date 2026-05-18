@@ -1,4 +1,4 @@
-import { Avatar, Badge, Grid, GridItem, HStack, Text } from "@chakra-ui/react";
+import { Grid, GridItem, HStack, Text } from "@chakra-ui/react";
 import { Trophy } from "lucide-react";
 import { formatMoney } from "../../../lib/format";
 import type { LeaderboardEntry } from "../types";
@@ -31,11 +31,9 @@ export function LeaderboardRow({ entry, highlighted = false }: Props) {
       </GridItem>
       <GridItem minW={0}>
         <HStack minW={0}>
-          <Avatar name={entry.displayName} size="sm" />
           <Text fontWeight="700" noOfLines={1}>
-            {entry.displayName}
+            {entry.playerName}
           </Text>
-          {entry.country ? <Badge variant="subtle">{entry.country}</Badge> : null}
         </HStack>
       </GridItem>
       <GridItem textAlign="right">
