@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { calculateRewardAllocations } from "../rewards.js";
-import type { RankedScore } from "../../types/leaderboard.js";
+import { calculateRewardAllocations } from "../rewards";
+import type { RankedScore } from "../../../types/leaderboard";
 
 function entries(count: number): RankedScore[] {
   return Array.from({ length: count }, (_, index) => ({
-    playerId: `player-${index + 1}`,
+    playerId: index + 1,
     rank: index + 1,
     score: BigInt(1_000_000 - index)
   }));

@@ -1,11 +1,11 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
-import { prisma } from "../db/prisma.js";
+import { prisma } from "../db/prisma";
 
 export async function findPlayerByName(playerName: string, db: PrismaClient = prisma) {
   return await db.player.findUnique({ where: { playerName } });
 }
 
-export async function findPlayersByIds(playerIds: string[], db: PrismaClient = prisma) {
+export async function findPlayersByIds(playerIds: number[], db: PrismaClient = prisma) {
   if (playerIds.length === 0) {
     return [];
   }
@@ -16,7 +16,7 @@ export async function findPlayersByIds(playerIds: string[], db: PrismaClient = p
 }
 
 export async function incrementPlayerTotalMoney(
-  playerId: string,
+  playerId: number,
   amount: bigint,
   db: Prisma.TransactionClient | PrismaClient = prisma
 ) {

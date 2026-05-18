@@ -1,8 +1,8 @@
-import { getMongoDb } from "../db/mongo.js";
+import { getMongoDb } from "../db/mongo";
 
 export async function insertEarningEvent(event: {
   weekId: string;
-  playerId: string;
+  playerId: number;
   playerName: string;
   amount: string;
   prizeContribution: string;
@@ -17,7 +17,7 @@ export async function insertEarningEvent(event: {
 
 export async function insertPayoutAudit(event: {
   weekId: string;
-  playerId: string;
+  playerId: number;
   rank: number;
   amount: string;
 }) {

@@ -1,12 +1,11 @@
-import type { RankedScore } from "../types/leaderboard.js";
+import { BASIS_POINTS, REWARD_BASIS_POINTS } from "../constants/rewards";
+import type { RankedScore } from "../../types/leaderboard";
 
 export type RewardAllocation = {
-  playerId: string;
+  playerId: number;
   rank: number;
   amount: bigint;
 };
-
-const BASIS_POINTS = 10_000n;
 
 function percent(pool: bigint, basisPoints: bigint) {
   return (pool * basisPoints) / BASIS_POINTS;
@@ -18,13 +17,13 @@ export function calculateRewardAllocations(entries: RankedScore[], prizePool: bi
   }
 
   const top100 = entries.filter((entry) => entry.rank >= 1 && entry.rank <= 100);
-  const allocations = new Map<string, RewardAllocation>();
+  const allocations = new Map<number, RewardAllocation>();
   let allocated = 0n;
 
   const fixedRewards = new Map<number, bigint>([
-    [1, percent(prizePool, 2_000n)],
-    [2, percent(prizePool, 1_500n)],
-    [3, percent(prizePool, 1_000n)]
+    [1, percent(prizePool, REWARD_BASIS_POINTS.first)],
+    [2, percent(prizePool, REWARD_BASIS_POINTS.second)],
+    [3, percent(prizePool, REWARD_BASIS_POINTS.third)]
   ]);
 
   for (const entry of top100) {
@@ -36,7 +35,7 @@ export function calculateRewardAllocations(entries: RankedScore[], prizePool: bi
   }
 
   const weightedEntries = top100.filter((entry) => entry.rank >= 4 && entry.rank <= 100);
-  const weightedPool = percent(prizePool, 5_500n);
+  const weightedPool = percent(prizePool, REWARD_BASIS_POINTS.fourthToHundredth);
   const totalWeight = weightedEntries.reduce((sum, entry) => sum + BigInt(101 - entry.rank), 0n);
   let weightedAllocated = 0n;
 

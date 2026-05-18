@@ -1,8 +1,8 @@
-import { prisma } from "../db/prisma.js";
-import { redis } from "../db/redis.js";
-import type { RankedScore } from "../types/leaderboard.js";
-import { getLeaderboardDeltasKey, getLeaderboardKey, getPrizePoolKey } from "../utils/redis-keys.js";
-import { getDefaultWeekWindow } from "../utils/week.js";
+import { prisma } from "../db/prisma";
+import { redis } from "../db/redis";
+import type { RankedScore } from "../types/leaderboard";
+import { getLeaderboardDeltasKey, getLeaderboardKey, getPrizePoolKey } from "../common/utils/redis-keys";
+import { getDefaultWeekWindow } from "../common/utils/week";
 
 export async function ensureWeek(weekId: string) {
   const { startsAt, endsAt } = getDefaultWeekWindow(weekId);
@@ -18,9 +18,10 @@ export async function ensureWeek(weekId: string) {
   });
 }
 
-export async function incrementLeaderboardScore(weekId: string, playerId: string, amount: bigint) {
-  await redis.zIncrBy(getLeaderboardKey(weekId), Number(amount), playerId);
-  await redis.hIncrBy(getLeaderboardDeltasKey(weekId), playerId, Number(amount));
+export async function incrementLeaderboardScore(weekId: string, playerId: number, amount: bigint) {
+  const redisPlayerId = playerId.toString();
+  await redis.zIncrBy(getLeaderboardKey(weekId), Number(amount), redisPlayerId);
+  await redis.hIncrBy(getLeaderboardDeltasKey(weekId), redisPlayerId, Number(amount));
 }
 
 export async function incrementPrizePool(weekId: string, amount: bigint) {
@@ -36,19 +37,20 @@ export async function getTopScores(weekId: string, limit = 100): Promise<RankedS
   const rows = await redis.zRangeWithScores(getLeaderboardKey(weekId), 0, limit - 1, { REV: true });
 
   return rows.map((row, index) => ({
-    playerId: row.value,
+    playerId: Number(row.value),
     rank: index + 1,
     score: BigInt(Math.trunc(row.score))
   }));
 }
 
-export async function getPlayerRankedScore(weekId: string, playerId: string): Promise<RankedScore | null> {
-  const rank = await redis.zRevRank(getLeaderboardKey(weekId), playerId);
+export async function getPlayerRankedScore(weekId: string, playerId: number): Promise<RankedScore | null> {
+  const redisPlayerId = playerId.toString();
+  const rank = await redis.zRevRank(getLeaderboardKey(weekId), redisPlayerId);
   if (rank === null) {
     return null;
   }
 
-  const score = await redis.zScore(getLeaderboardKey(weekId), playerId);
+  const score = await redis.zScore(getLeaderboardKey(weekId), redisPlayerId);
   return {
     playerId,
     rank: rank + 1,
@@ -62,7 +64,7 @@ export async function getRankWindow(weekId: string, rank: number, before = 3, af
   const rows = await redis.zRangeWithScores(getLeaderboardKey(weekId), start, end, { REV: true });
 
   return rows.map((row, index) => ({
-    playerId: row.value,
+    playerId: Number(row.value),
     rank: start + index + 1,
     score: BigInt(Math.trunc(row.score))
   }));
@@ -72,7 +74,8 @@ export async function flushDeltasToPostgres(weekId: string) {
   const deltas = await redis.hGetAll(getLeaderboardDeltasKey(weekId));
   const entries = Object.entries(deltas);
 
-  for (const [playerId, delta] of entries) {
+  for (const [redisPlayerId, delta] of entries) {
+    const playerId = Number(redisPlayerId);
     await prisma.playerWeeklyScore.upsert({
       where: {
         weekId_playerId: { weekId, playerId }
@@ -89,7 +92,7 @@ export async function flushDeltasToPostgres(weekId: string) {
       }
     });
 
-    await redis.hDel(getLeaderboardDeltasKey(weekId), playerId);
+    await redis.hDel(getLeaderboardDeltasKey(weekId), redisPlayerId);
   }
 
   return entries.length;
@@ -108,7 +111,7 @@ export async function rebuildRedisFromPostgres(weekId: string) {
   await redis.del(getLeaderboardKey(weekId));
   await redis.zAdd(
     getLeaderboardKey(weekId),
-    scores.map((score) => ({ value: score.playerId, score: Number(score.score) }))
+    scores.map((score) => ({ value: score.playerId.toString(), score: Number(score.score) }))
   );
 
   return scores.length;

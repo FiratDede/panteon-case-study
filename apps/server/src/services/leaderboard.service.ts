@@ -5,12 +5,12 @@ import {
   getPrizePool,
   getRankWindow,
   getTopScores
-} from "../repositories/leaderboard.repository.js";
-import { findPlayerByName, findPlayersByIds } from "../repositories/player.repository.js";
-import type { LeaderboardEntry, RankedScore } from "../types/leaderboard.js";
-import { HttpError } from "../errors/http-error.js";
-import { calculateRewardAllocations } from "../utils/rewards.js";
-import { getCurrentWeekId, getTimeRemainingSeconds } from "../utils/week.js";
+} from "../repositories/leaderboard.repository";
+import { findPlayerByName, findPlayersByIds } from "../repositories/player.repository";
+import type { LeaderboardEntry, RankedScore } from "../types/leaderboard";
+import { AppError } from "../common/errors/AppError";
+import { calculateRewardAllocations } from "../common/utils/rewards";
+import { getCurrentWeekId, getTimeRemainingSeconds } from "../common/utils/week";
 
 export function getCurrentLeaderboard(playerName: string) {
   return getLeaderboard(getCurrentWeekId(), playerName);
@@ -19,7 +19,7 @@ export function getCurrentLeaderboard(playerName: string) {
 export async function getLeaderboard(weekId: string, playerName: string) {
   const player = await findPlayerByName(playerName);
   if (!player) {
-    throw new HttpError(404, "Player not found");
+    throw new AppError(404, "Player not found");
   }
 
   const week = await ensureWeek(weekId);
@@ -67,17 +67,17 @@ export async function getLeaderboard(weekId: string, playerName: string) {
   };
 }
 
-async function getPlayerMap(playerIds: string[]) {
+async function getPlayerMap(playerIds: number[]) {
   const players = await findPlayersByIds([...new Set(playerIds)]);
-  return new Map<string, Player>(players.map((player: Player) => [player.id, player]));
+  return new Map<number, Player>(players.map((player: Player) => [player.id, player]));
 }
 
-function toEntry(score: RankedScore, players: Map<string, Player>, rewards: Map<string, bigint>): LeaderboardEntry {
+function toEntry(score: RankedScore, players: Map<number, Player>, rewards: Map<number, bigint>): LeaderboardEntry {
   const player = players.get(score.playerId);
 
   return {
     playerId: score.playerId,
-    playerName: player?.playerName ?? score.playerId,
+    playerName: player?.playerName ?? score.playerId.toString(),
     rank: score.rank,
     score: score.score.toString(),
     projectedReward: (rewards.get(score.playerId) ?? 0n).toString()
@@ -85,7 +85,7 @@ function toEntry(score: RankedScore, players: Map<string, Player>, rewards: Map<
 }
 
 function dedupeScores(scores: RankedScore[]) {
-  const map = new Map<string, RankedScore>();
+  const map = new Map<number, RankedScore>();
 
   for (const score of scores) {
     map.set(score.playerId, score);

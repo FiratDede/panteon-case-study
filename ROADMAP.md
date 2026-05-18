@@ -109,6 +109,7 @@ Server code should use a layered Express structure:
 - `repositories`: Prisma, Redis, and MongoDB data access.
 - `validators`: runtime request validation schemas.
 - `middleware`: cross-cutting Express middleware.
+- `common`: shared errors, constants, and utility functions.
 - `jobs`: scheduled and manual weekly finalization workers.
 
 Use consistent domain names across layers:

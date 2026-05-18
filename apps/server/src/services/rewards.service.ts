@@ -1,9 +1,9 @@
 import type { Prisma } from "@prisma/client";
-import { prisma } from "../db/prisma.js";
-import { insertPayoutAudit } from "../repositories/audit.repository.js";
-import { ensureWeek, getPrizePool, getTopScores } from "../repositories/leaderboard.repository.js";
-import { HttpError } from "../errors/http-error.js";
-import { calculateRewardAllocations } from "../utils/rewards.js";
+import { prisma } from "../db/prisma";
+import { insertPayoutAudit } from "../repositories/audit.repository";
+import { ensureWeek, getPrizePool, getTopScores } from "../repositories/leaderboard.repository";
+import { AppError } from "../common/errors/AppError";
+import { calculateRewardAllocations } from "../common/utils/rewards";
 
 export async function finalizeWeek(weekId: string) {
   const week = await ensureWeek(weekId);
@@ -14,7 +14,7 @@ export async function finalizeWeek(weekId: string) {
   const [topScores, prizePool] = await Promise.all([getTopScores(weekId, 100), getPrizePool(weekId)]);
 
   if (topScores.length === 0) {
-    throw new HttpError(400, "Cannot finalize an empty leaderboard");
+    throw new AppError(400, "Cannot finalize an empty leaderboard");
   }
 
   const allocations = calculateRewardAllocations(topScores, prizePool);

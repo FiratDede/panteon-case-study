@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
-import { getMongoDb } from "../db/mongo.js";
-import { prisma } from "../db/prisma.js";
-import { redis } from "../db/redis.js";
+import { getMongoDb } from "../db/mongo";
+import { prisma } from "../db/prisma";
+import { redis } from "../db/redis";
 
 export async function getHealth(_request: Request, response: Response) {
   await Promise.all([prisma.$queryRaw`SELECT 1`, redis.ping(), getMongoDb().command({ ping: 1 })]);

@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { getCurrentWeekId, getDefaultWeekWindow } from "../src/utils/week.js";
+import { getCurrentWeekId, getDefaultWeekWindow } from "../src/common/utils/week";
 
 const prisma = new PrismaClient();
 

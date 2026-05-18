@@ -1,5 +1,5 @@
 import type { IdempotencyKey, PrismaClient } from "@prisma/client";
-import { prisma } from "../db/prisma.js";
+import { prisma } from "../db/prisma";
 
 export async function startIdempotencyKey(
   scope: string,

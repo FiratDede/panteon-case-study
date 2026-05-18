@@ -1,6 +1,6 @@
-import { logger } from "../config/logger.js";
-import { flushDeltasToPostgres } from "../repositories/leaderboard.repository.js";
-import { getCurrentWeekId } from "../utils/week.js";
+import { logger } from "../config/logger";
+import { flushDeltasToPostgres } from "../repositories/leaderboard.repository";
+import { getCurrentWeekId } from "../common/utils/week";
 
 export async function flushActiveWeekDeltas() {
   const weekId = getCurrentWeekId();

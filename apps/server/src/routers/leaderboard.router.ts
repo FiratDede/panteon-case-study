@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { record } from "../controllers/earnings.controller.js";
-import { getByWeek, getCurrent } from "../controllers/leaderboard.controller.js";
-import { resetCurrentWeek } from "../controllers/rewards.controller.js";
-import { asyncHandler } from "../utils/async-handler.js";
+import { record } from "../controllers/earnings.controller";
+import { getByWeek, getCurrent } from "../controllers/leaderboard.controller";
+import { resetCurrentWeek } from "../controllers/rewards.controller";
+import { asyncHandler } from "../common/utils/async-handler";
 
 export const leaderboardRouter = Router();
 

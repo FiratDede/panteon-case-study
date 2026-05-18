@@ -1,15 +1,15 @@
 import { createHash } from "node:crypto";
-import { insertEarningEvent } from "../repositories/audit.repository.js";
+import { insertEarningEvent } from "../repositories/audit.repository";
 import {
   completeIdempotencyKey,
   failIdempotencyKey,
   findIdempotencyKey,
   startIdempotencyKey
-} from "../repositories/idempotency.repository.js";
-import { ensureWeek, incrementLeaderboardScore, incrementPrizePool } from "../repositories/leaderboard.repository.js";
-import { findPlayerByName } from "../repositories/player.repository.js";
-import { HttpError } from "../errors/http-error.js";
-import { getCurrentWeekId } from "../utils/week.js";
+} from "../repositories/idempotency.repository";
+import { ensureWeek, incrementLeaderboardScore, incrementPrizePool } from "../repositories/leaderboard.repository";
+import { findPlayerByName } from "../repositories/player.repository";
+import { AppError } from "../common/errors/AppError";
+import { getCurrentWeekId } from "../common/utils/week";
 
 export async function recordEarning(input: {
   playerName: string;
@@ -29,13 +29,13 @@ export async function recordEarning(input: {
       return existing.responseBody;
     }
 
-    throw new HttpError(409, "Earning event is already being processed");
+    throw new AppError(409, "Earning event is already being processed");
   }
 
   try {
     const player = await findPlayerByName(input.playerName);
     if (!player) {
-      throw new HttpError(404, "Player not found");
+      throw new AppError(404, "Player not found");
     }
 
     await ensureWeek(weekId);

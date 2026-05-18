@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import { getCurrentLeaderboard, getLeaderboard } from "../services/leaderboard.service.js";
-import { leaderboardQuerySchema, weekParamsSchema } from "../validators/leaderboard.validator.js";
+import { getCurrentLeaderboard, getLeaderboard } from "../services/leaderboard.service";
+import { leaderboardQuerySchema, weekParamsSchema } from "../validators/leaderboard.validator";
 
 export async function getCurrent(request: Request, response: Response) {
   const query = leaderboardQuerySchema.parse(request.query);

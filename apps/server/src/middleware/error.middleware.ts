@@ -1,7 +1,7 @@
 import type { ErrorRequestHandler } from "express";
 import { ZodError } from "zod";
-import { logger } from "../config/logger.js";
-import { HttpError } from "../errors/http-error.js";
+import { logger } from "../config/logger";
+import { AppError } from "../common/errors/AppError";
 
 export const errorMiddleware: ErrorRequestHandler = (error, _request, response, _next) => {
   if (error instanceof ZodError) {
@@ -14,7 +14,7 @@ export const errorMiddleware: ErrorRequestHandler = (error, _request, response, 
     return;
   }
 
-  if (error instanceof HttpError) {
+  if (error instanceof AppError) {
     response.status(error.statusCode).json({
       error: {
         message: error.message,

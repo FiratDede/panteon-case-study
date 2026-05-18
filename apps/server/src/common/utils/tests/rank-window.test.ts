@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { getAroundRankWindow } from "../rank-window.js";
-import type { RankedScore } from "../../types/leaderboard.js";
+import { getAroundRankWindow } from "../rank-window";
+import type { RankedScore } from "../../../types/leaderboard";
 
 const entries: RankedScore[] = Array.from({ length: 120 }, (_, index) => ({
-  playerId: `player-${index + 1}`,
+  playerId: index + 1,
   rank: index + 1,
   score: BigInt(120 - index)
 }));
