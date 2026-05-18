@@ -3,9 +3,10 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": ".",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
     "types": ["node", "vitest"]
   },
-  "include": ["src", "prisma"]
+  "include": ["src", "prisma"],
+  "exclude": ["src/testScripts", "src/**/*.test.ts"]
 }

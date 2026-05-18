@@ -2,13 +2,12 @@
   "name": "@panteon/server",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/server.js",
+    "start": "node dist/src/server.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run --environment node",
+    "test": "vitest run --dir src --environment node",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "seed": "tsx prisma/seed.ts"
@@ -20,6 +19,7 @@
     "express": "^4.21.2",
     "helmet": "^8.0.0",
     "mongodb": "^6.12.0",
+    "p-limit": "^7.3.0",
     "pino": "^9.6.0",
     "pino-http": "^10.4.0",
     "pino-pretty": "^13.0.0",

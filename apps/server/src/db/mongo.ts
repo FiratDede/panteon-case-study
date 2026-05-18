@@ -1,5 +1,5 @@
 import { MongoClient } from "mongodb";
-import { env } from "../config/env.js";
+import { env } from "../config/env";
 
 export const mongoClient = new MongoClient(env.MONGODB_URL);
 

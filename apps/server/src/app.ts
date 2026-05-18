@@ -2,15 +2,15 @@ import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 import pinoHttpModule from "pino-http";
-import { env } from "./config/env.js";
-import { logger } from "./config/logger.js";
-import { healthRouter } from "./routers/health.router.js";
-import { leaderboardRouter } from "./routers/leaderboard.router.js";
-import { errorMiddleware } from "./middleware/error.middleware.js";
+import { env } from "./config/env";
+import { logger } from "./config/logger";
+import { healthRouter } from "./routers/health.router";
+import { leaderboardRouter } from "./routers/leaderboard.router";
+import { errorMiddleware } from "./middleware/error.middleware";
 
 export function createApp() {
   const app = express();
-  const pinoHttp = pinoHttpModule as unknown as typeof pinoHttpModule.default;
+  const pinoHttp = pinoHttpModule;
 
   app.use(helmet());
   app.use(cors({ origin: env.CLIENT_ORIGIN }));

@@ -1,8 +1,8 @@
-import { env } from "./config/env.js";
-import { logger } from "./config/logger.js";
-import { connectMongo } from "./db/mongo.js";
-import { connectRedis } from "./db/redis.js";
-import { createApp } from "./app.js";
+import { env } from "./config/env";
+import { logger } from "./config/logger";
+import { connectMongo } from "./db/mongo";
+import { connectRedis } from "./db/redis";
+import { createApp } from "./app";
 
 async function bootstrap() {
   await Promise.all([connectRedis(), connectMongo()]);
