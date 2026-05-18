@@ -81,11 +81,11 @@ MongoDB stores raw earning and audit events for investigation and reconciliation
 
 Minimum production API:
 
-- `GET /health`
-- `GET /api/v1/leaderboards/current?playerName={name}`
-- `GET /api/v1/leaderboards/weeks/{weekId}?playerName={name}`
-- `POST /api/v1/events/earn`
-- `POST /api/v1/admin/weeks/{weekId}/finalize` for protected/manual testing
+- `GET /api/health`
+- `GET /api/leaderboard/weeks/current?playerName={name}`
+- `GET /api/leaderboard/weeks/{weekId}?playerName={name}`
+- `POST /api/events/earn`
+- `POST /api/admin/weeks/{weekId}/finalize` for protected/manual testing
 
 Public leaderboard GET routes should accept `playerName`. Internally, the server resolves that name to the stable `playerId` used by PostgreSQL relations and Redis sorted sets.
 

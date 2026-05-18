@@ -3,8 +3,8 @@
 ## Leaderboard
 
 ```text
-GET /api/v1/leaderboards/current?playerName={name}
-GET /api/v1/leaderboards/weeks/{weekId}?playerName={name}
+GET /api/leaderboard/weeks/current?playerName={name}
+GET /api/leaderboard/weeks/{weekId}?playerName={name}
 ```
 
 Public leaderboard GET routes accept `playerName`. The server resolves the name to the stable internal `playerId`.
@@ -12,7 +12,7 @@ Public leaderboard GET routes accept `playerName`. The server resolves the name 
 ## Earning Event
 
 ```text
-POST /api/v1/events/earn
+POST /api/events/earn
 ```
 
 Body:
@@ -28,5 +28,5 @@ Body:
 ## Finalization
 
 ```text
-POST /api/v1/admin/weeks/{weekId}/finalize
+POST /api/admin/weeks/{weekId}/finalize
 ```
