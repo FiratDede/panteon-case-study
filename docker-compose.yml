@@ -1,0 +1,34 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: panteon-postgres
+    environment:
+      POSTGRES_USER: panteon
+      POSTGRES_PASSWORD: panteon
+      POSTGRES_DB: panteon_leaderboard
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: panteon-redis
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec", "--save", "60", "10000"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  mongo:
+    image: mongo:7
+    container_name: panteon-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  postgres-data:
+  redis-data:
+  mongo-data:

@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum WeeklyLeaderboardStatus {
+  ACTIVE
+  FINALIZING
+  FINALIZED
+}
+
+enum RewardPayoutStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+enum IdempotencyStatus {
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+model Player {
+  id                  String                   @id @default(uuid())
+  playerName          String                   @unique @map("player_name")
+  displayName         String                   @map("display_name")
+  avatarUrl           String?                  @map("avatar_url")
+  country             String?
+  totalMoney          BigInt                   @default(0) @map("total_money")
+  createdAt           DateTime                 @default(now()) @map("created_at")
+  updatedAt           DateTime                 @updatedAt @map("updated_at")
+  weeklyScores        PlayerWeeklyScore[]
+  leaderboardEntries  WeeklyLeaderboardEntry[]
+  rewardPayouts       RewardPayout[]
+
+  @@map("players")
+}
+
+model PlayerWeeklyScore {
+  id        String   @id @default(uuid())
+  weekId    String   @map("week_id")
+  playerId  String   @map("player_id")
+  score     BigInt   @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  player    Player   @relation(fields: [playerId], references: [id])
+
+  @@unique([weekId, playerId])
+  @@index([weekId, score])
+  @@map("player_weekly_scores")
+}
+
+model WeeklyLeaderboard {
+  id          String                    @id @default(uuid())
+  weekId      String                    @unique @map("week_id")
+  startsAt    DateTime                  @map("starts_at")
+  endsAt      DateTime                  @map("ends_at")
+  prizePool   BigInt                    @default(0) @map("prize_pool")
+  status      WeeklyLeaderboardStatus   @default(ACTIVE)
+  finalizedAt DateTime?                 @map("finalized_at")
+  createdAt   DateTime                  @default(now()) @map("created_at")
+  updatedAt   DateTime                  @updatedAt @map("updated_at")
+  entries     WeeklyLeaderboardEntry[]
+  payouts     RewardPayout[]
+
+  @@map("weekly_leaderboards")
+}
+
+model WeeklyLeaderboardEntry {
+  id                    String              @id @default(uuid())
+  weeklyLeaderboardId   String              @map("weekly_leaderboard_id")
+  playerId              String              @map("player_id")
+  rank                  Int
+  score                 BigInt
+  createdAt             DateTime            @default(now()) @map("created_at")
+  player                Player              @relation(fields: [playerId], references: [id])
+  weeklyLeaderboard     WeeklyLeaderboard   @relation(fields: [weeklyLeaderboardId], references: [id])
+
+  @@unique([weeklyLeaderboardId, playerId])
+  @@unique([weeklyLeaderboardId, rank])
+  @@map("weekly_leaderboard_entries")
+}
+
+model RewardPayout {
+  id                    String               @id @default(uuid())
+  weeklyLeaderboardId   String               @map("weekly_leaderboard_id")
+  playerId              String               @map("player_id")
+  rank                  Int
+  amount                BigInt
+  status                RewardPayoutStatus   @default(PENDING)
+  paidAt                DateTime?            @map("paid_at")
+  createdAt             DateTime             @default(now()) @map("created_at")
+  updatedAt             DateTime             @updatedAt @map("updated_at")
+  player                Player               @relation(fields: [playerId], references: [id])
+  weeklyLeaderboard     WeeklyLeaderboard    @relation(fields: [weeklyLeaderboardId], references: [id])
+
+  @@unique([weeklyLeaderboardId, playerId])
+  @@map("reward_payouts")
+}
+
+model IdempotencyKey {
+  id           String             @id @default(uuid())
+  key          String
+  scope        String
+  requestHash  String             @map("request_hash")
+  responseBody Json?              @map("response_body")
+  status       IdempotencyStatus  @default(IN_PROGRESS)
+  createdAt    DateTime           @default(now()) @map("created_at")
+  expiresAt    DateTime?          @map("expires_at")
+
+  @@unique([scope, key])
+  @@map("idempotency_keys")
+}
