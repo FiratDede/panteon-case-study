@@ -4,10 +4,8 @@ import helmet from "helmet";
 import pinoHttpModule from "pino-http";
 import { env } from "./config/env.js";
 import { logger } from "./config/logger.js";
-import { earningsRouter } from "./routers/earnings.router.js";
 import { healthRouter } from "./routers/health.router.js";
 import { leaderboardRouter } from "./routers/leaderboard.router.js";
-import { rewardsRouter } from "./routers/rewards.router.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
 
 export function createApp() {
@@ -23,8 +21,6 @@ export function createApp() {
 
   apiRouter.use("/health", healthRouter);
   apiRouter.use("/leaderboard", leaderboardRouter);
-  apiRouter.use("/events", earningsRouter);
-  apiRouter.use("/admin", rewardsRouter);
 
   app.use("/api", apiRouter);
 

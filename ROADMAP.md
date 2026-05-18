@@ -84,8 +84,8 @@ Minimum production API:
 - `GET /api/health`
 - `GET /api/leaderboard/weeks/current?playerName={name}`
 - `GET /api/leaderboard/weeks/{weekId}?playerName={name}`
-- `POST /api/events/earn`
-- `POST /api/admin/weeks/{weekId}/finalize` for protected/manual testing
+- `POST /api/leaderboard/earnings`
+- `POST /api/leaderboard/weeks/reset` for protected/manual testing
 
 Public leaderboard GET routes should accept `playerName`. Internally, the server resolves that name to the stable `playerId` used by PostgreSQL relations and Redis sorted sets.
 
@@ -114,8 +114,8 @@ Server code should use a layered Express structure:
 Use consistent domain names across layers:
 
 - `leaderboard.router.ts`, `leaderboard.controller.ts`, `leaderboard.service.ts`, `leaderboard.repository.ts`
-- `earnings.router.ts`, `earnings.controller.ts`, `earnings.service.ts`, `earnings.repository.ts`
-- `rewards.router.ts`, `rewards.controller.ts`, `rewards.service.ts`, `rewards.repository.ts`
+- `earnings.controller.ts`, `earnings.service.ts`
+- `rewards.controller.ts`, `rewards.service.ts`
 - `players.router.ts`, `players.controller.ts`, `players.service.ts`, `players.repository.ts`
 - `health.router.ts`, `health.controller.ts`, `health.service.ts`
 

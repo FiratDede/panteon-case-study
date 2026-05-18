@@ -12,7 +12,7 @@ Public leaderboard GET routes accept `playerName`. The server resolves the name 
 ## Earning Event
 
 ```text
-POST /api/events/earn
+POST /api/leaderboard/earnings
 ```
 
 Body:
@@ -28,5 +28,5 @@ Body:
 ## Finalization
 
 ```text
-POST /api/admin/weeks/{weekId}/finalize
+POST /api/leaderboard/weeks/reset
 ```
