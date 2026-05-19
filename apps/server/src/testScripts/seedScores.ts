@@ -1,8 +1,11 @@
 import { randomInt } from "crypto";
 import { getLeaderboardKey, getPrizePoolKey } from "../common/utils/redis-keys";
-import { getCurrentWeekId } from "../common/utils/week";
+import { getCurrentWeekId, getDefaultWeekWindow } from "../common/utils/week";
 import { chunkArray } from "../common/utils/chunk";
 import { connectRedis, redis } from "../db/redis";
+import { connectMongo, mongoClient } from "../db/mongo";
+import { prisma } from "../db/prisma";
+import { finalizeWeek } from "../services/rewards.service";
 
 async function runWithConcurrency<T>(items: T[], concurrency: number, worker: (item: T) => Promise<unknown>) {
   let nextIndex = 0;
@@ -18,12 +21,43 @@ async function runWithConcurrency<T>(items: T[], concurrency: number, worker: (i
   await Promise.all(Array.from({ length: concurrency }, runWorker));
 }
 
+function parseSeedDate(input?: string) {
+  if (!input) {
+    return new Date();
+  }
+
+  const match = /^(?<year>\d{4})\/(?<month>\d{2})\/(?<day>\d{2})$/.exec(input);
+  if (!match?.groups) {
+    throw new Error("Date must be in yyyy/mm/dd format");
+  }
+
+  const year = Number(match.groups.year);
+  const month = Number(match.groups.month);
+  const day = Number(match.groups.day);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
+    throw new Error("Date must be a valid calendar date");
+  }
+
+  return date;
+}
+
+function isPastWeek(weekId: string, currentWeekId: string) {
+  return getDefaultWeekWindow(weekId).startsAt.getTime() < getDefaultWeekWindow(currentWeekId).startsAt.getTime();
+}
+
 async function run() {
   if (process.argv.length < 3) {
-    throw new Error("You must specify how many scores of players you want to create");
+    throw new Error("Usage: ts-node seedScores.ts <scoreCount> [yyyy/mm/dd]");
   }
 
   const totalCountOfPlayers = Number(process.argv[2]);
+  if (!Number.isInteger(totalCountOfPlayers) || totalCountOfPlayers <= 0) {
+    throw new Error("Score count must be a positive integer");
+  }
+
+  const seedDate = parseSeedDate(process.argv[3]);
   let totalScore = 0n;
   const data = Array.from({ length: totalCountOfPlayers }, (_, index) => ({
     value: (index + 1).toString(),
@@ -33,12 +67,8 @@ async function run() {
     return entry;
   });
 
-  // const weekId = getCurrentWeekId();
-  
-  const oneWeekAgo = new Date();
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-  const weekId = getCurrentWeekId(oneWeekAgo)
-
+  const weekId = getCurrentWeekId(seedDate);
+  const currentWeekId = getCurrentWeekId();
   const leaderboardKey = getLeaderboardKey(weekId);
   const prizePoolKey = getPrizePoolKey(weekId);
   const chunks = chunkArray(data, 1000);
@@ -51,6 +81,12 @@ async function run() {
 
   console.log(`${totalCountOfPlayers} player scores added to ${leaderboardKey}.`);
   console.log(`${prizePoolContribution.toString()} added to ${prizePoolKey}.`);
+
+  if (isPastWeek(weekId, currentWeekId)) {
+    await connectMongo();
+    const result = await finalizeWeek(weekId);
+    console.log(`Finalized ${weekId}: ${JSON.stringify(result)}`);
+  }
 }
 
 run()
@@ -62,4 +98,6 @@ run()
     if (redis.isOpen) {
       await redis.quit();
     }
+    await mongoClient.close();
+    await prisma.$disconnect();
   });
