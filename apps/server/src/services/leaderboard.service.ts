@@ -10,19 +10,30 @@ import { findPlayerByName, findPlayersByIds } from "../repositories/player.repos
 import type { LeaderboardEntry, RankedScore } from "../types/leaderboard";
 import { AppError } from "../common/errors/AppError";
 import { calculateRewardAllocations } from "../common/utils/rewards";
-import { getCurrentWeekId, getTimeRemainingSeconds } from "../common/utils/week";
+import { getTimeRemainingSeconds } from "../common/utils/week";
 
 
 export async function getLeaderboard(weekId: string, playerName: string) {
-  const player = await findPlayerByName(playerName);
-  if (!player) {
-    throw new AppError(404, "Player not found");
+
+
+
+  let player;
+
+  if (playerName !== "") {
+    player = await findPlayerByName(playerName);
+
+    if (!player) {
+      throw new AppError(404, "Player not found");
+    }
+
   }
+  
+
 
   const week = await ensureWeek(weekId);
   const [topScores, currentPlayerScore, prizePool] = await Promise.all([
     getTopScores(weekId, 100),
-    getPlayerRankedScore(weekId, player.id),
+    (player) ? getPlayerRankedScore(weekId, player.id) : player,
     getPrizePool(weekId)
   ]);
 
