@@ -1,4 +1,5 @@
 import type { LeaderboardResponse } from "../types/leaderboard";
+import type { RewardHistoryResponse } from "../types/rewards";
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000";
 
@@ -26,4 +27,15 @@ export async function fetchLeaderboard(playerName: string): Promise<LeaderboardR
   }
 
   return (await response.json()) as LeaderboardResponse;
+}
+
+export async function fetchRewardHistory(weekId?: string): Promise<RewardHistoryResponse> {
+  const query = weekId ? `?weekId=${encodeURIComponent(weekId)}` : "";
+  const response = await fetch(`${apiBaseUrl}/api/leaderboard/weeks/rewards/history${query}`);
+
+  if (!response.ok) {
+    throw new ApiError(`Reward history API returned ${response.status}`, response.status);
+  }
+
+  return (await response.json()) as RewardHistoryResponse;
 }
