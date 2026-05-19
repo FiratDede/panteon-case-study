@@ -60,8 +60,9 @@ export function PreviousWinnersScreen() {
                 aria-label="Select week"
                 value={selectedWeekId ?? data?.selectedWeekId ?? ""}
                 onChange={(event) => setSelectedWeekId(event.target.value || undefined)}
-                borderColor="#E0E0E0"
+                borderColor="#AFAFAF"
                 focusBorderColor="brand.500"
+                _hover={{ borderColor: "#8F8F8F" }}
                 isDisabled={loading || !data || data.weeks.length === 0}
               >
                 {data?.weeks.map((week) => (

@@ -87,10 +87,11 @@ export function LeaderBoardScreen() {
                   }}
                   placeholder="Search by name"
                   bg="white"
-                  borderColor="#E0E0E0"
+                  borderColor="#AFAFAF"
                   color="#333333"
                   fontSize="16px"
                   focusBorderColor="brand.500"
+                  _hover={{ borderColor: "#8F8F8F" }}
                 />
                 <IconButton
                   aria-label="Search leaderboard"
