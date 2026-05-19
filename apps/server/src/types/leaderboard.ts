@@ -1,5 +1,5 @@
 export type LeaderboardEntry = {
-  playerId: string;
+  playerId: number;
   playerName: string;
   rank: number;
   score: string;
@@ -29,7 +29,7 @@ export type LeaderboardResponse = {
 };
 
 export type RankedScore = {
-  playerId: string;
+  playerId: number;
   rank: number;
   score: bigint;
 };

@@ -1,10 +1,11 @@
 import type { Request, Response } from "express";
-import { getCurrentLeaderboard, getLeaderboard } from "../services/leaderboard.service";
+import {  getLeaderboard } from "../services/leaderboard.service";
 import { leaderboardQuerySchema, weekParamsSchema } from "../validators/leaderboard.validator";
+import { getCurrentWeekId } from "../common/utils/week";
 
 export async function getCurrent(request: Request, response: Response) {
   const query = leaderboardQuerySchema.parse(request.query);
-  const result = await getCurrentLeaderboard(query.playerName);
+  const result = await getLeaderboard(getCurrentWeekId(),query.playerName);
   response.json(result);
 }
 

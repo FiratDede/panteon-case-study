@@ -12,9 +12,6 @@ import { AppError } from "../common/errors/AppError";
 import { calculateRewardAllocations } from "../common/utils/rewards";
 import { getCurrentWeekId, getTimeRemainingSeconds } from "../common/utils/week";
 
-export function getCurrentLeaderboard(playerName: string) {
-  return getLeaderboard(getCurrentWeekId(), playerName);
-}
 
 export async function getLeaderboard(weekId: string, playerName: string) {
   const player = await findPlayerByName(playerName);

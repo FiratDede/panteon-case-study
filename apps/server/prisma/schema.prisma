@@ -26,7 +26,7 @@ enum IdempotencyStatus {
 }
 
 model Player {
-  id                  String                   @id @default(uuid())
+  id                  Int                      @id @default(autoincrement())
   playerName          String                   @unique @map("player_name")
   totalMoney          BigInt                   @default(0) @map("total_money")
   createdAt           DateTime                 @default(now()) @map("created_at")
@@ -41,7 +41,7 @@ model Player {
 model PlayerWeeklyScore {
   id        String   @id @default(uuid())
   weekId    String   @map("week_id")
-  playerId  String   @map("player_id")
+  playerId  Int      @map("player_id")
   score     BigInt   @default(0)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -71,7 +71,7 @@ model WeeklyLeaderboard {
 model WeeklyLeaderboardEntry {
   id                    String              @id @default(uuid())
   weeklyLeaderboardId   String              @map("weekly_leaderboard_id")
-  playerId              String              @map("player_id")
+  playerId              Int                 @map("player_id")
   rank                  Int
   score                 BigInt
   createdAt             DateTime            @default(now()) @map("created_at")
@@ -86,7 +86,7 @@ model WeeklyLeaderboardEntry {
 model RewardPayout {
   id                    String               @id @default(uuid())
   weeklyLeaderboardId   String               @map("weekly_leaderboard_id")
-  playerId              String               @map("player_id")
+  playerId              Int                  @map("player_id")
   rank                  Int
   amount                BigInt
   status                RewardPayoutStatus   @default(PENDING)
