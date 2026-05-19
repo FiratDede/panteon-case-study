@@ -1,5 +1,5 @@
 import { randomInt } from "crypto";
-import { getLeaderboardKey } from "../common/utils/redis-keys";
+import { getLeaderboardKey, getPrizePoolKey } from "../common/utils/redis-keys";
 import { getCurrentWeekId } from "../common/utils/week";
 import { chunkArray } from "../common/utils/chunk";
 import { connectRedis, redis } from "../db/redis";
@@ -24,20 +24,28 @@ async function run() {
   }
 
   const totalCountOfPlayers = Number(process.argv[2]);
+  let totalScore = 0n;
   const data = Array.from({ length: totalCountOfPlayers }, (_, index) => ({
     value: (index + 1).toString(),
     score: randomInt(5000000)
-  }));
+  })).map((entry) => {
+    totalScore += BigInt(entry.score);
+    return entry;
+  });
 
   const weekId = getCurrentWeekId();
   const leaderboardKey = getLeaderboardKey(weekId);
+  const prizePoolKey = getPrizePoolKey(weekId);
   const chunks = chunkArray(data, 1000);
+  const prizePoolContribution = (totalScore * 2n) / 100n;
 
   await connectRedis();
 
   await runWithConcurrency(chunks, 5, (chunk) => redis.zAdd(leaderboardKey, chunk));
+  await redis.incrBy(prizePoolKey, Number(prizePoolContribution));
 
   console.log(`${totalCountOfPlayers} player scores added to ${leaderboardKey}.`);
+  console.log(`${prizePoolContribution.toString()} added to ${prizePoolKey}.`);
 }
 
 run()

@@ -16,6 +16,7 @@ const totalCountOfPlayers = Number(process.argv[2])
   const data = Array.from({ length: totalCountOfPlayers }, (_, i) => {
     return {
       playerName: `player-${i + 1}`,
+      id: i
     }
   });
 
