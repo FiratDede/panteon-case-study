@@ -6,6 +6,7 @@ import { AppError } from "../common/errors/AppError";
 import { calculateRewardAllocations } from "../common/utils/rewards";
 
 export async function finalizeWeek(weekId: string) {
+  console.log("Finalizing week:")
   const week = await ensureWeek(weekId);
   if (week.status === "FINALIZED") {
     return { weekId, status: "already_finalized" };
