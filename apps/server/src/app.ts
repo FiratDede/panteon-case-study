@@ -7,6 +7,8 @@ import { logger } from "./config/logger";
 import { healthRouter } from "./routers/health.router";
 import { leaderboardRouter } from "./routers/leaderboard.router";
 import { errorMiddleware } from "./middleware/error.middleware";
+import { finalizeWeek } from "./services/rewards.service";
+import { getCurrentWeekId } from "./common/utils/week";
 
 export function createApp() {
   const app = express();

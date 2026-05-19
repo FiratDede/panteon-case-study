@@ -112,3 +112,78 @@ export async function finalizeWeek(weekId: string) {
     prizePool: prizePool.toString()
   };
 }
+
+export async function getRewardHistory(weekId?: string) {
+  const weeks = await prisma.weeklyLeaderboard.findMany({
+    where: {
+      payouts: {
+        some: {}
+      }
+    },
+    orderBy: {
+      startsAt: "desc"
+    },
+    select: {
+      id: true,
+      weekId: true,
+      startsAt: true,
+      endsAt: true,
+      status: true
+    }
+  });
+
+  const selectedWeekId = weekId ?? weeks[0]?.weekId ?? null;
+
+  if (!selectedWeekId) {
+    return {
+      weeks: [],
+      selectedWeekId: null,
+      winners: []
+    };
+  }
+
+  const selectedWeek = weeks.find((week) => week.weekId === selectedWeekId);
+  const payouts = await prisma.rewardPayout.findMany({
+    where: {
+      weeklyLeaderboard: {
+        weekId: selectedWeekId
+      }
+    },
+    orderBy: {
+      rank: "asc"
+    },
+    include: {
+      player: {
+        select: {
+          playerName: true
+        }
+      }
+    }
+  });
+
+  return {
+    weeks: weeks.map((week) => ({
+      weekId: week.weekId,
+      startsAt: week.startsAt.toISOString(),
+      endsAt: week.endsAt.toISOString(),
+      status: week.status
+    })),
+    selectedWeekId,
+    selectedWeek: selectedWeek
+      ? {
+          weekId: selectedWeek.weekId,
+          startsAt: selectedWeek.startsAt.toISOString(),
+          endsAt: selectedWeek.endsAt.toISOString(),
+          status: selectedWeek.status
+        }
+      : null,
+    winners: payouts.map((payout) => ({
+      playerId: payout.playerId,
+      playerName: payout.player.playerName,
+      rank: payout.rank,
+      amount: payout.amount.toString(),
+      status: payout.status,
+      paidAt: payout.paidAt?.toISOString() ?? null
+    }))
+  };
+}

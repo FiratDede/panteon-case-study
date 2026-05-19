@@ -33,7 +33,12 @@ async function run() {
     return entry;
   });
 
-  const weekId = getCurrentWeekId();
+  // const weekId = getCurrentWeekId();
+  
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  const weekId = getCurrentWeekId(oneWeekAgo)
+
   const leaderboardKey = getLeaderboardKey(weekId);
   const prizePoolKey = getPrizePoolKey(weekId);
   const chunks = chunkArray(data, 1000);
