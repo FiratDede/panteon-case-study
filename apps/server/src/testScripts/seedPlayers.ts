@@ -2,7 +2,10 @@ import { randomInt } from "crypto";
 import pLimit from "p-limit";
 import { chunkArray } from "../common/utils/chunk";
 import { prisma } from "../db/prisma"
-if(process.argv.length < 3) {
+
+
+async function run() {
+  if(process.argv.length < 3) {
     throw new Error("You must specify how many players you want to create")
 }
 const totalCountOfPlayers = Number(process.argv[2])
@@ -28,4 +31,8 @@ const totalCountOfPlayers = Number(process.argv[2])
       )
     )
   );
-  console.log("Players added.")
+  console.log(`${totalCountOfPlayers} players  added.`)
+  
+}
+
+run();

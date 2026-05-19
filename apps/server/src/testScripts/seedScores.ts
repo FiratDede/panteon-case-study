@@ -37,7 +37,7 @@ async function run() {
 
   await runWithConcurrency(chunks, 5, (chunk) => redis.zAdd(leaderboardKey, chunk));
 
-  console.log(`Player scores added to ${leaderboardKey}.`);
+  console.log(`${totalCountOfPlayers} player scores added to ${leaderboardKey}.`);
 }
 
 run()
