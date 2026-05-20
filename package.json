@@ -4,16 +4,19 @@
   "private": true,
   "workspaces": [
     "apps/server",
-    "apps/client"
+    "apps/client",
+    "apps/cron",
+    "packages/shared"
   ],
   "scripts": {
     "dev": "npm-run-all --parallel dev:server dev:client",
     "dev:server": "npm --workspace apps/server run dev",
     "dev:client": "npm --workspace apps/client run dev",
+    "dev:cron": "npm --workspace apps/cron run dev",
     "preview:client": "npm --workspace apps/client run preview -- --host 0.0.0.0 --port 5173",
-    "build": "npm --workspace apps/server run build && npm --workspace apps/client run build",
+    "build": "npm --workspace packages/shared run build && npm --workspace apps/server run build && npm --workspace apps/cron run build && npm --workspace apps/client run build",
     "test": "npm --workspace apps/server run test",
-    "typecheck": "npm --workspace apps/server run typecheck && npm --workspace apps/client run typecheck",
+    "typecheck": "npm --workspace packages/shared run typecheck && npm --workspace apps/server run typecheck && npm --workspace apps/cron run typecheck && npm --workspace apps/client run typecheck",
     "prisma:generate": "npm --workspace apps/server run prisma:generate",
     "prisma:migrate": "npm --workspace apps/server run prisma:migrate",
     "seed": "npm --workspace apps/server run seed"
