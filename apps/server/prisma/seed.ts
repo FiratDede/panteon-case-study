@@ -16,22 +16,12 @@ async function main() {
 
   for (let index = 1; index <= 150; index += 1) {
     const playerName = `player-${index.toString().padStart(3, "0")}`;
-    const player = await prisma.player.upsert({
+    await prisma.player.upsert({
       where: { playerName },
       update: {},
       create: {
         playerName,
         totalMoney: BigInt(100_000 + index)
-      }
-    });
-
-    await prisma.playerWeeklyScore.upsert({
-      where: { weekId_playerId: { weekId, playerId: player.id } },
-      update: { score: BigInt((151 - index) * 10_000) },
-      create: {
-        weekId,
-        playerId: player.id,
-        score: BigInt((151 - index) * 10_000)
       }
     });
   }

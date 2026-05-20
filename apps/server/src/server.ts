@@ -12,13 +12,6 @@ async function bootstrap() {
     logger.info({ port: env.PORT }, "Server listening");
   });
 
-  // console.log(await finalizeWeek(getCurrentWeekId()))
-
-  //  const oneWeekAgo = new Date();
-  // oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-  // const weekId = getCurrentWeekId(oneWeekAgo)
-
-  // console.log(await finalizeWeek(getCurrentWeekId(oneWeekAgo)))
 }
 
 bootstrap().catch((error) => {

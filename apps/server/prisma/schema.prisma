@@ -13,43 +13,15 @@ enum WeeklyLeaderboardStatus {
   FINALIZED
 }
 
-enum RewardPayoutStatus {
-  PENDING
-  PAID
-  FAILED
-}
-
-enum IdempotencyStatus {
-  IN_PROGRESS
-  COMPLETED
-  FAILED
-}
-
 model Player {
   id                  Int                      @id @default(autoincrement())
   playerName          String                   @unique @map("player_name")
   totalMoney          BigInt                   @default(0) @map("total_money")
   createdAt           DateTime                 @default(now()) @map("created_at")
   updatedAt           DateTime                 @updatedAt @map("updated_at")
-  weeklyScores        PlayerWeeklyScore[]
-  leaderboardEntries  WeeklyLeaderboardEntry[]
-  rewardPayouts       RewardPayout[]
+  leaderboardWinners  WeeklyLeaderboardWinner[]
 
   @@map("players")
-}
-
-model PlayerWeeklyScore {
-  id        String   @id @default(uuid())
-  weekId    String   @map("week_id")
-  playerId  Int      @map("player_id")
-  score     BigInt   @default(0)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  player    Player   @relation(fields: [playerId], references: [id])
-
-  @@unique([weekId, playerId])
-  @@index([weekId, score])
-  @@map("player_weekly_scores")
 }
 
 model WeeklyLeaderboard {
@@ -62,54 +34,26 @@ model WeeklyLeaderboard {
   finalizedAt DateTime?                 @map("finalized_at")
   createdAt   DateTime                  @default(now()) @map("created_at")
   updatedAt   DateTime                  @updatedAt @map("updated_at")
-  entries     WeeklyLeaderboardEntry[]
-  payouts     RewardPayout[]
+  winners     WeeklyLeaderboardWinner[]
 
   @@map("weekly_leaderboards")
 }
 
-model WeeklyLeaderboardEntry {
+model WeeklyLeaderboardWinner {
   id                    String              @id @default(uuid())
   weeklyLeaderboardId   String              @map("weekly_leaderboard_id")
   playerId              Int                 @map("player_id")
   rank                  Int
   score                 BigInt
+  rewardAmount          BigInt              @map("reward_amount")
+  paidAt                DateTime            @default(now()) @map("paid_at")
   createdAt             DateTime            @default(now()) @map("created_at")
+  updatedAt             DateTime            @updatedAt @map("updated_at")
   player                Player              @relation(fields: [playerId], references: [id])
   weeklyLeaderboard     WeeklyLeaderboard   @relation(fields: [weeklyLeaderboardId], references: [id])
 
   @@unique([weeklyLeaderboardId, playerId])
   @@unique([weeklyLeaderboardId, rank])
-  @@map("weekly_leaderboard_entries")
-}
-
-model RewardPayout {
-  id                    String               @id @default(uuid())
-  weeklyLeaderboardId   String               @map("weekly_leaderboard_id")
-  playerId              Int                  @map("player_id")
-  rank                  Int
-  amount                BigInt
-  status                RewardPayoutStatus   @default(PENDING)
-  paidAt                DateTime?            @map("paid_at")
-  createdAt             DateTime             @default(now()) @map("created_at")
-  updatedAt             DateTime             @updatedAt @map("updated_at")
-  player                Player               @relation(fields: [playerId], references: [id])
-  weeklyLeaderboard     WeeklyLeaderboard    @relation(fields: [weeklyLeaderboardId], references: [id])
-
-  @@unique([weeklyLeaderboardId, playerId])
-  @@map("reward_payouts")
-}
-
-model IdempotencyKey {
-  id           String             @id @default(uuid())
-  key          String
-  scope        String
-  requestHash  String             @map("request_hash")
-  responseBody Json?              @map("response_body")
-  status       IdempotencyStatus  @default(IN_PROGRESS)
-  createdAt    DateTime           @default(now()) @map("created_at")
-  expiresAt    DateTime?          @map("expires_at")
-
-  @@unique([scope, key])
-  @@map("idempotency_keys")
+  @@index([playerId])
+  @@map("weekly_leaderboard_winners")
 }

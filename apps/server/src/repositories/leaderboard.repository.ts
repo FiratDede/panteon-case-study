@@ -1,4 +1,4 @@
-import { getDefaultWeekWindow, getLeaderboardDeltasKey, getLeaderboardKey, getPrizePoolKey, type RankedScore } from "@panteon/shared";
+import { getDefaultWeekWindow, getLeaderboardKey, getPrizePoolKey, type RankedScore } from "@panteon/shared";
 import { prisma } from "../db/prisma";
 import { redis } from "../db/redis";
 
@@ -14,16 +14,6 @@ export async function ensureWeek(weekId: string) {
       endsAt
     }
   });
-}
-
-export async function incrementLeaderboardScore(weekId: string, playerId: number, amount: bigint) {
-  const redisPlayerId = playerId.toString();
-  await redis.zIncrBy(getLeaderboardKey(weekId), Number(amount), redisPlayerId);
-  await redis.hIncrBy(getLeaderboardDeltasKey(weekId), redisPlayerId, Number(amount));
-}
-
-export async function incrementPrizePool(weekId: string, amount: bigint) {
-  await redis.incrBy(getPrizePoolKey(weekId), Number(amount));
 }
 
 export async function getPrizePool(weekId: string) {
@@ -66,51 +56,4 @@ export async function getRankWindow(weekId: string, rank: number, before = 3, af
     rank: start + index + 1,
     score: BigInt(Math.trunc(row.score))
   }));
-}
-
-export async function flushDeltasToPostgres(weekId: string) {
-  const deltas = await redis.hGetAll(getLeaderboardDeltasKey(weekId));
-  const entries = Object.entries(deltas);
-
-  for (const [redisPlayerId, delta] of entries) {
-    const playerId = Number(redisPlayerId);
-    await prisma.playerWeeklyScore.upsert({
-      where: {
-        weekId_playerId: { weekId, playerId }
-      },
-      update: {
-        score: {
-          increment: BigInt(delta)
-        }
-      },
-      create: {
-        weekId,
-        playerId,
-        score: BigInt(delta)
-      }
-    });
-
-    await redis.hDel(getLeaderboardDeltasKey(weekId), redisPlayerId);
-  }
-
-  return entries.length;
-}
-
-export async function rebuildRedisFromPostgres(weekId: string) {
-  const scores = await prisma.playerWeeklyScore.findMany({
-    where: { weekId },
-    select: { playerId: true, score: true }
-  });
-
-  if (scores.length === 0) {
-    return 0;
-  }
-
-  await redis.del(getLeaderboardKey(weekId));
-  await redis.zAdd(
-    getLeaderboardKey(weekId),
-    scores.map((score) => ({ value: score.playerId.toString(), score: Number(score.score) }))
-  );
-
-  return scores.length;
 }

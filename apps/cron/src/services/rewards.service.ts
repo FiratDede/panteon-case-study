@@ -27,29 +27,15 @@ export async function finalizeWeek(weekId: string) {
       }
     });
 
-    for (const score of topScores) {
-      await tx.weeklyLeaderboardEntry.upsert({
-        where: {
-          weeklyLeaderboardId_playerId: {
-            weeklyLeaderboardId: updatedWeek.id,
-            playerId: score.playerId
-          }
-        },
-        update: {
-          rank: score.rank,
-          score: score.score
-        },
-        create: {
-          weeklyLeaderboardId: updatedWeek.id,
-          playerId: score.playerId,
-          rank: score.rank,
-          score: score.score
-        }
-      });
-    }
+    const scoreByPlayerId = new Map(topScores.map((score) => [score.playerId, score]));
 
     for (const allocation of allocations) {
-      const existingPayout = await tx.rewardPayout.findUnique({
+      const score = scoreByPlayerId.get(allocation.playerId);
+      if (!score) {
+        continue;
+      }
+
+      const existingWinner = await tx.weeklyLeaderboardWinner.findUnique({
         where: {
           weeklyLeaderboardId_playerId: {
             weeklyLeaderboardId: updatedWeek.id,
@@ -58,17 +44,17 @@ export async function finalizeWeek(weekId: string) {
         }
       });
 
-      if (existingPayout) {
+      if (existingWinner) {
         continue;
       }
 
-      await tx.rewardPayout.create({
+      await tx.weeklyLeaderboardWinner.create({
         data: {
           weeklyLeaderboardId: updatedWeek.id,
           playerId: allocation.playerId,
           rank: allocation.rank,
-          amount: allocation.amount,
-          status: "PAID",
+          score: score.score,
+          rewardAmount: allocation.amount,
           paidAt: new Date()
         }
       });
