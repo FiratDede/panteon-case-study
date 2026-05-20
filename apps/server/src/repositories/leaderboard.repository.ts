@@ -1,8 +1,6 @@
+import { getDefaultWeekWindow, getLeaderboardDeltasKey, getLeaderboardKey, getPrizePoolKey, type RankedScore } from "@panteon/shared";
 import { prisma } from "../db/prisma";
 import { redis } from "../db/redis";
-import type { RankedScore } from "../types/leaderboard";
-import { getLeaderboardDeltasKey, getLeaderboardKey, getPrizePoolKey } from "../common/utils/redis-keys";
-import { getDefaultWeekWindow } from "../common/utils/week";
 
 export async function ensureWeek(weekId: string) {
   const { startsAt, endsAt } = getDefaultWeekWindow(weekId);

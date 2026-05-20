@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { getCurrentWeekId, getDefaultWeekWindow } from "../src/common/utils/week";
+import { getCurrentWeekId, getDefaultWeekWindow } from "@panteon/shared";
 
 const prisma = new PrismaClient();
 

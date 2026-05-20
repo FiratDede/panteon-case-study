@@ -1,4 +1,5 @@
 import type { Player } from "@prisma/client";
+import { calculateRewardAllocations, getTimeRemainingSeconds, type LeaderboardEntry, type RankedScore } from "@panteon/shared";
 import {
   ensureWeek,
   getPlayerRankedScore,
@@ -7,10 +8,7 @@ import {
   getTopScores
 } from "../repositories/leaderboard.repository";
 import { findPlayerByName, findPlayersByIds } from "../repositories/player.repository";
-import type { LeaderboardEntry, RankedScore } from "../types/leaderboard";
 import { AppError } from "../common/errors/AppError";
-import { calculateRewardAllocations } from "../common/utils/rewards";
-import { getTimeRemainingSeconds } from "../common/utils/week";
 
 
 export async function getLeaderboard(weekId: string, playerName: string) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getCurrentWeekId, getDefaultWeekWindow } from "../week";
+import { getCurrentWeekId, getDefaultWeekWindow } from "@panteon/shared";
 
 describe("week utilities", () => {
   it("builds the current ISO week id from a date", () => {

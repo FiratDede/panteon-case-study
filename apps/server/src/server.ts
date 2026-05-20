@@ -3,9 +3,6 @@ import { logger } from "./config/logger";
 import { connectMongo } from "./db/mongo";
 import { connectRedis } from "./db/redis";
 import { createApp } from "./app";
-import { startRewardCron } from "./services/cron.service";
-import { finalizeWeek } from "./services/rewards.service";
-import { getCurrentWeekId } from "./common/utils/week";
 
 async function bootstrap() {
   await Promise.all([connectRedis(), connectMongo()]);
@@ -14,8 +11,6 @@ async function bootstrap() {
   app.listen(env.PORT, () => {
     logger.info({ port: env.PORT }, "Server listening");
   });
-
-  startRewardCron();
 
   // console.log(await finalizeWeek(getCurrentWeekId()))
 

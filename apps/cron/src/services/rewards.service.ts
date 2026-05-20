@@ -1,12 +1,10 @@
 import type { Prisma } from "@prisma/client";
 import { calculateRewardAllocations } from "@panteon/shared";
 import { prisma } from "../db/prisma";
-import { insertPayoutAudit } from "../repositories/audit.repository";
 import { ensureWeek, getPrizePool, getTopScores } from "../repositories/leaderboard.repository";
-import { AppError } from "../common/errors/AppError";
+import { insertPayoutAudit } from "../repositories/audit.repository";
 
 export async function finalizeWeek(weekId: string) {
-  console.log("Finalizing week:")
   const week = await ensureWeek(weekId);
   if (week.status === "FINALIZED") {
     return { weekId, status: "already_finalized" };
@@ -15,7 +13,7 @@ export async function finalizeWeek(weekId: string) {
   const [topScores, prizePool] = await Promise.all([getTopScores(weekId, 100), getPrizePool(weekId)]);
 
   if (topScores.length === 0) {
-    throw new AppError(400, "Cannot finalize an empty leaderboard");
+    throw new Error("Cannot finalize an empty leaderboard");
   }
 
   const allocations = calculateRewardAllocations(topScores, prizePool);
@@ -110,80 +108,5 @@ export async function finalizeWeek(weekId: string) {
     status: "finalized",
     paidPlayers: allocations.length,
     prizePool: prizePool.toString()
-  };
-}
-
-export async function getRewardHistory(weekId?: string) {
-  const weeks = await prisma.weeklyLeaderboard.findMany({
-    where: {
-      payouts: {
-        some: {}
-      }
-    },
-    orderBy: {
-      startsAt: "desc"
-    },
-    select: {
-      id: true,
-      weekId: true,
-      startsAt: true,
-      endsAt: true,
-      status: true
-    }
-  });
-
-  const selectedWeekId = weekId ?? weeks[0]?.weekId ?? null;
-
-  if (!selectedWeekId) {
-    return {
-      weeks: [],
-      selectedWeekId: null,
-      winners: []
-    };
-  }
-
-  const selectedWeek = weeks.find((week) => week.weekId === selectedWeekId);
-  const payouts = await prisma.rewardPayout.findMany({
-    where: {
-      weeklyLeaderboard: {
-        weekId: selectedWeekId
-      }
-    },
-    orderBy: {
-      rank: "asc"
-    },
-    include: {
-      player: {
-        select: {
-          playerName: true
-        }
-      }
-    }
-  });
-
-  return {
-    weeks: weeks.map((week) => ({
-      weekId: week.weekId,
-      startsAt: week.startsAt.toISOString(),
-      endsAt: week.endsAt.toISOString(),
-      status: week.status
-    })),
-    selectedWeekId,
-    selectedWeek: selectedWeek
-      ? {
-          weekId: selectedWeek.weekId,
-          startsAt: selectedWeek.startsAt.toISOString(),
-          endsAt: selectedWeek.endsAt.toISOString(),
-          status: selectedWeek.status
-        }
-      : null,
-    winners: payouts.map((payout) => ({
-      playerId: payout.playerId,
-      playerName: payout.player.playerName,
-      rank: payout.rank,
-      amount: payout.amount.toString(),
-      status: payout.status,
-      paidAt: payout.paidAt?.toISOString() ?? null
-    }))
   };
 }

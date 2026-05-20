@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getAroundRankWindow } from "../rank-window";
-import type { RankedScore } from "../../../types/leaderboard";
+import type { RankedScore } from "@panteon/shared";
 
 const entries: RankedScore[] = Array.from({ length: 120 }, (_, index) => ({
   playerId: index + 1,

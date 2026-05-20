@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
+import { getCurrentWeekId } from "@panteon/shared";
 import {  getLeaderboard } from "../services/leaderboard.service";
 import { leaderboardQuerySchema, weekParamsSchema } from "../validators/leaderboard.validator";
-import { getCurrentWeekId } from "../common/utils/week";
 
 export async function getCurrent(request: Request, response: Response) {
   const query = leaderboardQuerySchema.parse(request.query);

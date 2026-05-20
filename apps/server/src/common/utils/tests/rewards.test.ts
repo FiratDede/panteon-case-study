@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateRewardAllocations } from "../rewards";
-import type { RankedScore } from "../../../types/leaderboard";
+import { calculateRewardAllocations, type RankedScore } from "@panteon/shared";
 
 function entries(count: number): RankedScore[] {
   return Array.from({ length: count }, (_, index) => ({

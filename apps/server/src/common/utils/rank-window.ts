@@ -1,4 +1,4 @@
-import type { RankedScore } from "../../types/leaderboard";
+import type { RankedScore } from "@panteon/shared";
 
 export function getAroundRankWindow(entries: RankedScore[], currentRank: number, before = 3, after = 2) {
   const startRank = Math.max(1, currentRank - before);

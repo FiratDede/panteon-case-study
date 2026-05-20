@@ -1,6 +1,5 @@
 import { randomInt } from "crypto";
-import { getLeaderboardKey, getPrizePoolKey } from "../common/utils/redis-keys";
-import { getCurrentWeekId, getDefaultWeekWindow } from "../common/utils/week";
+import { getCurrentWeekId, getDefaultWeekWindow, getLeaderboardKey, getPrizePoolKey } from "@panteon/shared";
 import { chunkArray } from "../common/utils/chunk";
 import { connectRedis, redis } from "../db/redis";
 import { connectMongo, mongoClient } from "../db/mongo";

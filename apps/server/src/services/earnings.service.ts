@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { getCurrentWeekId } from "@panteon/shared";
 import { insertEarningEvent } from "../repositories/audit.repository";
 import {
   completeIdempotencyKey,
@@ -9,7 +10,6 @@ import {
 import { ensureWeek, incrementLeaderboardScore, incrementPrizePool } from "../repositories/leaderboard.repository";
 import { findPlayerByName } from "../repositories/player.repository";
 import { AppError } from "../common/errors/AppError";
-import { getCurrentWeekId } from "../common/utils/week";
 
 export async function recordEarning(input: {
   playerName: string;
