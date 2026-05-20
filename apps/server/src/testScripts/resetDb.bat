@@ -13,6 +13,10 @@ call  ts-node seedPlayers.ts 2000000
 
 call  ts-node seedScores.ts 2000000
 
+REM alttaki komut örnek olsun diye geçmiş haftadakileri gösterir.
+ call ts-node seedScores.ts 2000000 2026/05/12
+
+
 echo Exit code: %ERRORLEVEL%
 
 pause

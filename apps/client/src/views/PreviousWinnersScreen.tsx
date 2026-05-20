@@ -5,6 +5,8 @@ import {
   Box,
   Container,
   Heading,
+  HStack,
+  Icon,
   Select,
   Skeleton,
   Stack,
@@ -19,7 +21,8 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { useRewardHistory } from "../hooks/useRewardHistory";
-import { formatMoney } from "../lib/format";
+import { formatDuration, formatMoney } from "../lib/format";
+import { Coins } from "lucide-react";
 
 function formatWeekLabel(weekId: string) {
   const match = /W(?<week>\d{2})$/.exec(weekId);
@@ -67,13 +70,40 @@ export function PreviousWinnersScreen() {
               >
                 {data?.weeks.map((week) => (
                   <option key={week.weekId} value={week.weekId}>
-                    {formatWeekLabel(week.weekId)} - {week.weekId}
+                    {formatWeekLabel(week.weekId)}
                   </option>
                 ))}
               </Select>
             </Stack>
           </Box>
-
+          <Box bg="white" borderRadius="card"  borderColor="#E0E0E0" paddingLeft={5} paddingRight={5} paddingTop={2} paddingBottom={2} boxShadow="card">
+            <HStack spacing={6} >
+              <Box>
+                <Text color="#666666" fontSize="sm" fontWeight="600">
+                  Distributed Prize:
+                </Text>
+                <Text fontSize={{ base: "md", md: "lg" }} fontWeight="700">
+                  {(data?.selectedWeek) ? data?.selectedWeek.prizePool.toString() : ""}
+                </Text>
+              </Box>
+               <Box>
+                <Text color="#666666" fontSize="sm" fontWeight="600">
+                  Started:
+                </Text>
+                <Text fontSize={{ base: "md", md: "lg" }} fontWeight="700">
+                  {(data?.selectedWeek) ? new Date(data?.selectedWeek.startsAt.toString()).toLocaleDateString("tr-TR") : ""}
+                </Text>
+              </Box>
+              <Box>
+                <Text color="#666666" fontSize="sm" fontWeight="600">
+                  Ended:
+                </Text>
+                <Text fontSize={{ base: "md", md: "lg" }} fontWeight="700">
+                  {(data?.selectedWeek) ? new Date(data?.selectedWeek.endsAt.toString()).toLocaleDateString("tr-TR") : ""}
+                </Text>
+              </Box>
+            </HStack>
+          </Box>
           {error ? (
             <Alert status="error" borderRadius="card">
               <AlertIcon />
@@ -117,7 +147,7 @@ export function PreviousWinnersScreen() {
                         <Td fontWeight="700" color="inherit">
                           {formatMoney(winner.amount)}
                         </Td>
-                       
+
                       </Tr>
                     ))}
                   </Tbody>

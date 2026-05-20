@@ -2,9 +2,6 @@ import { randomInt } from "crypto";
 import { getCurrentWeekId, getDefaultWeekWindow, getLeaderboardKey, getPrizePoolKey } from "@panteon/shared";
 import { chunkArray } from "../common/utils/chunk";
 import { connectRedis, redis } from "../db/redis";
-import { connectMongo, mongoClient } from "../db/mongo";
-import { prisma } from "../db/prisma";
-import { finalizeWeek } from "../services/rewards.service";
 
 async function runWithConcurrency<T>(items: T[], concurrency: number, worker: (item: T) => Promise<unknown>) {
   let nextIndex = 0;
@@ -82,9 +79,26 @@ async function run() {
   console.log(`${prizePoolContribution.toString()} added to ${prizePoolKey}.`);
 
   if (isPastWeek(weekId, currentWeekId)) {
-    await connectMongo();
-    const result = await finalizeWeek(weekId);
-    console.log(`Finalized ${weekId}: ${JSON.stringify(result)}`);
+    const [{ finalizeWeek }, cronRedis, cronMongo, cronPrisma] = await Promise.all([
+      import("../../../cron/src/services/rewards.service"),
+      import("../../../cron/src/db/redis"),
+      import("../../../cron/src/db/mongo"),
+      import("../../../cron/src/db/prisma")
+    ]);
+
+    await Promise.all([cronRedis.connectRedis(), cronMongo.connectMongo()]);
+
+    try {
+      const result = await finalizeWeek(weekId);
+      console.log(`Finalized ${weekId}: ${JSON.stringify(result)}`);
+    } finally {
+      if (cronRedis.redis.isOpen) {
+        await cronRedis.redis.quit();
+      }
+
+      await cronMongo.mongoClient.close();
+      await cronPrisma.prisma.$disconnect();
+    }
   }
 }
 
@@ -97,6 +111,4 @@ run()
     if (redis.isOpen) {
       await redis.quit();
     }
-    await mongoClient.close();
-    await prisma.$disconnect();
   });

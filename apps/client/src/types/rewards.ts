@@ -3,6 +3,7 @@ export type RewardWeek = {
   startsAt: string;
   endsAt: string;
   status: string;
+  prizePool: BigInt;
 };
 
 export type RewardWinner = {
@@ -10,8 +11,7 @@ export type RewardWinner = {
   playerName: string;
   rank: number;
   amount: string;
-  status: string;
-  paidAt: string | null;
+  paidAt: string;
 };
 
 export type RewardHistoryResponse = {
