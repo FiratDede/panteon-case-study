@@ -6,7 +6,7 @@ Weekly leaderboard implementation for the Panteon full-stack case study. The pro
 
 ## Live Deployment
 
-The deployed project is available at `http://3.122.158.66/`. This deployment contains 2,000,000 players and leaderboard scores, including winners for the previous week.
+The deployed project is available at `http://3.122.158.66/`. This deployment contains 2,000,000 players and leaderboard scores, including winners for the previous week. You can download these players' week 21 scores (player_id : score) from this link https://panteon-case-study.s3.eu-central-1.amazonaws.com/leaderboard-2026-W21.csv.gz 
 
 ## AI-Assisted Development
 
