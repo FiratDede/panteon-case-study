@@ -10,7 +10,8 @@
     "test": "vitest run --dir src --environment node",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx src/testScripts/seedLargeDataset.ts",
+    "seed:demo": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

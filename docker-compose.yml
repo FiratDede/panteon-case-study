@@ -10,6 +10,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U panteon -d panteon_leaderboard"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
   redis:
     image: redis:7-alpine
@@ -19,6 +24,11 @@ services:
       - "6379:6379"
     volumes:
       - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
   mongo:
     image: mongo:7
@@ -27,6 +37,91 @@ services:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+
+  migrate-and-seed:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    image: panteon-leaderboard-server:local
+    container_name: panteon-migrate-and-seed
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://panteon:panteon@postgres:5432/panteon_leaderboard?schema=public
+      REDIS_URL: redis://redis:6379
+      MONGODB_URL: mongodb://mongo:27017
+      MONGODB_DB: panteon_leaderboard
+    command: >
+      sh -c "npx prisma migrate deploy --schema apps/server/prisma/schema.prisma
+      && npm run seed"
+
+  server:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    image: panteon-leaderboard-server:local
+    container_name: panteon-server
+    depends_on:
+      migrate-and-seed:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      CLIENT_ORIGIN: http://localhost:5173
+      DATABASE_URL: postgresql://panteon:panteon@postgres:5432/panteon_leaderboard?schema=public
+      REDIS_URL: redis://redis:6379
+      MONGODB_URL: mongodb://mongo:27017
+      MONGODB_DB: panteon_leaderboard
+    ports:
+      - "4000:4000"
+
+  client:
+    build:
+      context: .
+      dockerfile: apps/client/Dockerfile
+    image: panteon-leaderboard-client:local
+    container_name: panteon-client
+    depends_on:
+      server:
+        condition: service_started
+    environment:
+      VITE_API_BASE_URL: http://localhost:4000
+    ports:
+      - "5173:5173"
+
+  cron:
+    build:
+      context: .
+      dockerfile: apps/cron/Dockerfile
+    image: panteon-leaderboard-cron:local
+    container_name: panteon-cron
+    depends_on:
+      migrate-and-seed:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://panteon:panteon@postgres:5432/panteon_leaderboard?schema=public
+      REDIS_URL: redis://redis:6379
+      MONGODB_URL: mongodb://mongo:27017
+      MONGODB_DB: panteon_leaderboard
 
 volumes:
   postgres-data:

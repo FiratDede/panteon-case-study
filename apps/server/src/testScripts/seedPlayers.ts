@@ -16,7 +16,7 @@ const totalCountOfPlayers = Number(process.argv[2])
   const data = Array.from({ length: totalCountOfPlayers }, (_, i) => {
     return {
       playerName: `player-${i + 1}`,
-      id: i
+      id: i + 1
     }
   });
 
@@ -32,6 +32,11 @@ const totalCountOfPlayers = Number(process.argv[2])
       )
     )
   );
+
+  await prisma.$executeRawUnsafe(
+    "SELECT setval(pg_get_serial_sequence('players', 'id'), (SELECT COALESCE(MAX(id), 1) FROM players))"
+  );
+
   console.log(`${totalCountOfPlayers} players  added.`)
   
 }
