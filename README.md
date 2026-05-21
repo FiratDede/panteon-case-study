@@ -139,6 +139,8 @@ npm run seed
 
 `npm run seed` creates 2,000,000 players, 2,000,000 current week scores, and 2,000,000 previous week scores. If you only need the smaller Prisma sample seed, run:
 
+Important: because this command inserts 2,000,000 players and millions of score entries, the related Docker Compose process can take a long time to finish starting.
+
 ```bash
 npm --workspace apps/server run seed:demo
 ```
@@ -216,8 +218,8 @@ Additional helper scripts live under `apps/server/src/testScripts`. These are no
 - `seedPlayers.ts` creates deterministic players named `player-1`, `player-2`, and so on.
 - `seedScores.ts` writes randomized scores into the Redis sorted set for a selected week and updates that week's prize pool key.
 - `seedLargeDataset.ts` runs the large dataset flow used by `npm run seed`: 2,000,000 players, current week scores, and previous week scores.
-- `resetDb.bat` is a Windows convenience script that resets Prisma migrations, flushes local Docker Redis, and seeds players/scores. It resolves paths relative to the script location, so it does not depend on a specific local checkout path.
-- `resetAndCreateSamples.sh` is a shell script for Unix-like environments. It resets the PostgreSQL database through Prisma, flushes Redis, reruns migrations, and then creates player and leaderboard score samples. It resolves paths relative to the script location and reads `REDIS_HOST`/`REDIS_PORT` from the environment when needed.
+- `resetDb.bat` is a Windows convenience script that resets Prisma migrations, flushes local Docker Redis, and seeds players/scores.
+- `resetAndCreateSamples.sh` is a shell script for Unix-like environments. It resets the PostgreSQL database through Prisma, flushes Redis, reruns migrations, and then creates player and leaderboard score samples. It  reads `REDIS_HOST`/`REDIS_PORT` from the environment when needed.
 
 For the manual scripts to produce a clean and predictable dataset, PostgreSQL and Redis should be empty before running them. The easiest full reset for local Docker data is:
 
